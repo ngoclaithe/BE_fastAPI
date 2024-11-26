@@ -5,6 +5,9 @@ from app.services.attendance_service import AttendanceService
 from app.database import get_db
 import os
 import time
+from PIL import Image
+import io
+
 
 router = APIRouter(
     prefix="/attendance",
@@ -13,13 +16,11 @@ router = APIRouter(
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
-# Kiểm tra định dạng file
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-# Định nghĩa AttendanceVerifyRequest
 class AttendanceVerifyRequest(BaseModel):
     date: str
 
@@ -47,6 +48,12 @@ async def upload_attendance_image_check_in(
         )
 
     try:
+        image_data = await file.read()
+        image = Image.open(io.BytesIO(image_data))
+
+        if image.mode != 'L':  
+            image = image.convert('L')
+            
         timestamp = int(time.time())
         file_extension = file.filename.split('.')[-1]
         filename = f"{teacher_id}.upload.{timestamp}.{file_extension}"

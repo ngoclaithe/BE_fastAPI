@@ -8,6 +8,8 @@ from datetime import datetime
 import face_recognition
 import os
 
+
+
 UPLOAD_FOLDER = './face_upload'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
