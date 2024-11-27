@@ -37,6 +37,10 @@ class UserService:
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
+        db_teacher = Teacher(name="", subject="", phone="", user_id=db_user.id, image_path="")
+        db.add(db_teacher)
+        db.commit()
+
         return db_user
     
     @staticmethod

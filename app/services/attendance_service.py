@@ -82,7 +82,7 @@ class AttendanceService:
                 best_match_distance = distances[best_match_index]
                 print(best_match_distance)
                   
-                if best_match_distance < 0.2:  
+                if best_match_distance < 0.4:  
                     
                     matched_faces.append(image_filenames[best_match_index])
 
