@@ -11,6 +11,7 @@ class TeacherBase(BaseModel):
     subject: str
     phone: str
     image_path: Optional[str] = None
+    teacher_code: Optional[str] = None
 class TeacherCreate(TeacherBase):
     user_id: Optional[int]
 
@@ -19,7 +20,7 @@ class TeacherUpdate(BaseModel):
     subject: Optional[str] = None
     phone: Optional[str] = None
     user_id: Optional[int] = None
-
+    teacher_code: Optional[str] = None
 class Teacher(TeacherBase):
     id: int
     user_id: Optional[int] = None

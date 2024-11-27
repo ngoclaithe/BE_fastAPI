@@ -8,7 +8,7 @@ class Timetable(Base):
     __tablename__ = "timetables"
     
     id = Column(Integer, primary_key=True, index=True)
-    teacher_id = Column(Integer)
+    teacher_code = Column(String)
     lesson = Column(String)  
     start_week = Column(Integer)  
     end_week = Column(Integer)  

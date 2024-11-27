@@ -13,3 +13,4 @@ class Teacher(Base):
     image_path = Column(String, nullable=True)
     schedules = relationship("Schedule", back_populates="teacher")
     user = relationship("User", back_populates="teacher")
+    teacher_code = Column(String)

@@ -32,7 +32,9 @@ class TeacherService:
     def update_teacher(db: Session, teacher_id: int, teacher: teacher_schema.TeacherUpdate):
         db_teacher = TeacherService.get_teacher(db, teacher_id)
         update_data = teacher.dict(exclude_unset=True)
+
         for key, value in update_data.items():
+            print(key, value)
             setattr(db_teacher, key, value)
         db.commit()
         db.refresh(db_teacher)

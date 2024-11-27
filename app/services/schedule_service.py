@@ -4,10 +4,16 @@ from fastapi import HTTPException
 from app.models.schedule import Schedule
 from app.models.shift import Shift
 from app.models.teacher import Teacher
+from app.models.timetable import Timetable
 from app.schemas.schedule_schema import ScheduleResponse
 from datetime import datetime, time, timedelta
 from typing import List
 from datetime import date
+from app.utils.parsedata import parse_timetable_excel
+from pathlib import Path
+
+UPLOAD_FOLDER = Path("data_excel_upload")
+UPLOAD_FILE_NAME = "upload_excel.xlsx"
 
 class ScheduleService:
     @staticmethod
@@ -278,12 +284,6 @@ class ScheduleService:
             .all()
         )
         
-        if not schedules:
-            raise HTTPException(
-                status_code=404, 
-                detail="No successful schedules found for this teacher today"
-            )
-        
         result = []
         for schedule in schedules:
             shift = db.query(Shift).filter(Shift.id == schedule.shift_id).first()
@@ -299,3 +299,20 @@ class ScheduleService:
             ))
         
         return result
+    @staticmethod
+    def secretary_upload_schedule(db: Session):
+        try:
+            if not file.filename.endswith(('.xlsx', '.xls')):
+                raise HTTPException(status_code=400, detail="Chỉ chấp nhận tệp Excel (.xlsx, .xls)")
+
+            file_path = UPLOAD_FOLDER / UPLOAD_FILE_NAME
+            result = parse_timetable_excel(str(file_path), db)
+
+            return {
+                "status": "success",
+                "message": "Đã check thông tin thành công",
+                "total_records": len(result) if result else 0
+            }
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Lỗi xử lý: {str(e)}")
