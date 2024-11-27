@@ -21,7 +21,6 @@ class SecretaryService:
     
     @staticmethod
     def create_secretary(db: Session, secretary: secretary_schema.SecretaryCreate):
-        # Check if user_id already has a secretary profile
         if SecretaryService.get_secretary_by_user_id(db, secretary.user_id):
             raise HTTPException(status_code=400, detail="User already has a secretary profile")
             

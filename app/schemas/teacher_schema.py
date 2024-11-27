@@ -12,6 +12,7 @@ class TeacherBase(BaseModel):
     phone: str
     image_path: Optional[str] = None
     teacher_code: Optional[str] = None
+
 class TeacherCreate(TeacherBase):
     user_id: Optional[int]
 

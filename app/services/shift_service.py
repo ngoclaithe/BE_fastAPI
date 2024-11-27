@@ -8,6 +8,8 @@ from app.models.schedule import Schedule
 from app.models.teacher import Teacher  
 from app.schemas import shift_schema
 from app.models.attendance import Attendance
+import calendar
+from sqlalchemy import func
 
 class ShiftService:
     @staticmethod
@@ -26,7 +28,22 @@ class ShiftService:
         return db.query(Shift).filter(Shift.date == target_date).all()
 
     @staticmethod
-    def get_shifts_by_month(db: Session, year: int, month: int) -> List[Shift]:
+    def get_shifts_by_month_for_teacher(db: Session, year: int, month: int) -> List[Shift]:
+        _, last_day = monthrange(year, month)
+        start_date = date(year, month, 1)
+        end_date = date(year, month, last_day)
+        
+        return (
+            db.query(Shift)
+            .filter(Shift.date >= start_date)
+            .filter(Shift.date <= end_date)
+            .filter(Shift.show_teacher == "true")
+            .order_by(Shift.date)
+            .all()
+        )
+
+    @staticmethod
+    def get_shifts_by_month_for_dean(db: Session, year: int, month: int) -> List[Shift]:
         _, last_day = monthrange(year, month)
         start_date = date(year, month, 1)
         end_date = date(year, month, last_day)
@@ -61,7 +78,24 @@ class ShiftService:
         db.commit()
         db.refresh(db_shift)
         return db_shift
-    
+
+    @staticmethod
+    def update_shift_show_teacher(db: Session, year: int, month: int, show_teacher: str) -> List[Shift]:
+        shifts = db.query(Shift).filter(
+            Shift.date.between(
+                date(year, month, 1), 
+                date(year, month, calendar.monthrange(year, month)[1])
+            )
+        ).all()
+        for shift in shifts:
+            shift.show_teacher = show_teacher
+        
+        db.commit()
+        for shift in shifts:
+            db.refresh(shift)
+        
+        return shifts
+
     @staticmethod
     def delete_shift(db: Session, shift_id: int) -> bool:
         shift = ShiftService.get_shift_by_id(db, shift_id)

@@ -21,8 +21,12 @@ def get_shifts_by_date(target_date: date, db: Session = Depends(get_db)):
     return ShiftService.get_shifts_by_date(db, target_date)
 
 @router.get("/month/{year}/{month}", response_model=List[shift_schema.Shift])
-def get_shifts_by_month(year: int, month: int, db: Session = Depends(get_db)):
-    return ShiftService.get_shifts_by_month(db, year, month)
+def get_shifts_by_month_for_teacher(year: int, month: int, db: Session = Depends(get_db)):
+    return ShiftService.get_shifts_by_month_for_teacher(db, year, month)
+
+@router.get("/month-for-dean/{year}/{month}", response_model=List[shift_schema.Shift])
+def get_shifts_by_month_for_dean(year: int, month: int, db: Session = Depends(get_db)):
+    return ShiftService.get_shifts_by_month_for_dean(db, year, month)
 
 @router.post("/", response_model=shift_schema.Shift)
 def create_shift(shift: shift_schema.ShiftCreate, db: Session = Depends(get_db)):
@@ -31,6 +35,10 @@ def create_shift(shift: shift_schema.ShiftCreate, db: Session = Depends(get_db))
 @router.put("/{shift_id}", response_model=shift_schema.Shift)
 def update_shift(shift_id: int, shift: shift_schema.ShiftUpdate, db: Session = Depends(get_db)):
     return ShiftService.update_shift(db, shift_id, shift)
+
+@router.put("/update_show_teacher/{year}/{month}/{show_teacher}", response_model=List[shift_schema.Shift])
+def update_shift_show_teacher(year: int, month: int, show_teacher: str, db: Session = Depends(get_db)):
+    return ShiftService.update_shift_show_teacher(db, year, month, show_teacher)
 
 @router.delete("/{shift_id}")
 def delete_shift(shift_id: int, db: Session = Depends(get_db)):

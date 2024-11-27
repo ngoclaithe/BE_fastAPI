@@ -56,9 +56,6 @@ class AttendanceService:
         check_out: str = None,
         description: str = None,
     ):
-        """
-        Ghi nhận điểm danh của giáo viên dựa trên việc nhận diện khuôn mặt trong ảnh.
-        """
         try:
             known_faces, image_filenames, teacher_id_map = encode_faces_in_folder(db)
           
@@ -141,14 +138,10 @@ class AttendanceService:
             )
     @staticmethod
     def verify_attendance_timing(db: Session, request_date: str):
-        """
-        Kiểm tra thời gian điểm danh của giáo viên so với thời gian ca trực.
-        Cập nhật ghi chú trong attendance cho biết giáo viên đi muộn hoặc về sớm bao nhiêu phút.
-        """
         try:
             shifts = db.query(Shift).filter(Shift.date == request_date).all()
             if not shifts:
-                raise HTTPException(status_code=404, detail="Không tìm thấy ca trực cho ngày này")
+                return {"success": False, "message": "Không có ca trực nào hôm nay"}
 
             description_to_times = {
                 '1': ('18:00:00', '19:30:00'),
@@ -176,6 +169,9 @@ class AttendanceService:
                             "end_time": end_time,
                         })
 
+            if not time_referencers:
+                return {"success": False, "message": "Không có ai điểm danh hôm nay"}
+
             for ref in time_referencers:
                 attendances = (
                     db.query(Attendance)
@@ -187,7 +183,6 @@ class AttendanceService:
                     .all()
                 )
                 for attendance in attendances:
-
                     check_time = datetime.strptime(attendance.time, "%H:%M:%S") if attendance.time else None
 
                     note = []
@@ -206,23 +201,16 @@ class AttendanceService:
             db.commit()
 
             return {"success": True, "message": "Kiểm tra thời gian điểm danh hoàn tất"}
+        except HTTPException as http_exc:
+            raise http_exc
         except Exception as e:
             raise HTTPException(
                 status_code=500,
                 detail=f"Lỗi kiểm tra thời gian điểm danh: {str(e)}"
             )
+
     @staticmethod
     def get_attendance_details(db: Session, date: str):
-        """
-        Trả về chi tiết điểm danh của tất cả giáo viên theo ngày và ca trực
-        
-        Args:
-            db (Session): Database session
-            date (str): Ngày điểm danh (format: 'YYYY-MM-DD')
-        
-        Returns:
-            Chi tiết điểm danh bao gồm cả giáo viên đã và chưa điểm danh
-        """
         try:
             shifts = db.query(Shift).filter(Shift.date == date).all()
             

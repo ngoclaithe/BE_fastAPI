@@ -8,5 +8,5 @@ class Shift(Base):
     id = Column(Integer, primary_key=True, index=True)
     date = Column(Date, index=True)
     description = Column(String)
-
+    show_teacher = Column(String, nullable=True)
     schedules = relationship("Schedule", back_populates="shift")
