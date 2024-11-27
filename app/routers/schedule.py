@@ -40,7 +40,9 @@ def create_schedule(schedule: schedule_schema.ScheduleCreate, db: Session = Depe
 def update_schedule(shift_id: int, schedule: schedule_schema.ScheduleUpdate, db: Session = Depends(get_db)):
     print("Gia tri shift id", shift_id)
     print("Gia tri schedule", schedule)
-    return ScheduleService.update_schedule(db=db, shift_id=shift_id, schedule=schedule)
+    updated_schedule = ScheduleService.update_schedule(db=db, shift_id=shift_id, schedule=schedule)
+    return updated_schedule
+
 
 @router.post("/assign/{shift_id}/{teacher_id}", response_model=schedule_schema.Schedule)
 def assign_teacher_to_shift(shift_id: int, teacher_id: int, db: Session = Depends(get_db)):

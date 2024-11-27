@@ -182,7 +182,7 @@ class ShiftService:
         shifts = db.query(Shift).filter(Shift.date == target_date).all()
         
         if not shifts:
-            raise HTTPException(status_code=404, detail="No shifts found for this date")
+            raise HTTPException(status_code=200, detail="Không có ca trực nào hôm nay")
         
         result = []
         

@@ -87,7 +87,7 @@ class ScheduleService:
     @staticmethod
     def update_schedule(
         db: Session, shift_id: int, schedule: schedule_schema.ScheduleUpdate
-    ):
+    ) -> Schedule:
         db_schedule = db.query(Schedule).filter(
             Schedule.shift_id == shift_id, Schedule.teacher_id == schedule.teacher_id
         ).first()
@@ -97,16 +97,19 @@ class ScheduleService:
                 status_code=404,
                 detail="Không tìm thấy lịch làm việc cho ca làm việc này"
             )
-        print("Tim thay db_schedule",db_schedule.note)
+        print("Tim thay db_schedule", db_schedule.note)
+
         update_data = schedule.dict(exclude_unset=True)
         print("Giá trị của update data", update_data)
-        if 'note' in update_data:
-            db_schedule.note = update_data['note']
+        for field, value in update_data.items():
+            setattr(db_schedule, field, value)
 
         db.commit()
         db.refresh(db_schedule)
 
-        return True
+        # Trả về đối tượng Schedule
+        return db_schedule
+
 
     @staticmethod
     def assign_teacher_to_shift(
