@@ -11,6 +11,7 @@ from app.models import secretary as secretary_model
 from app.models import shift as shift_model
 from app.models import attendance as attendance_model
 from app.models import timetable as timetable_model
+from app.models import teaching_plan as teaching_plan_model
 
 user_model.Base.metadata.create_all(bind=engine)
 teacher_model.Base.metadata.create_all(bind=engine)
@@ -20,6 +21,8 @@ secretary_model.Base.metadata.create_all(bind=engine)
 shift_model.Base.metadata.create_all(bind=engine)
 attendance_model.Base.metadata.create_all(bind=engine)
 timetable_model.Base.metadata.create_all(bind=engine)
+teaching_plan_model.Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI(title="VLU API")
 

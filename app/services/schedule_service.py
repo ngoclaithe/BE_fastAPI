@@ -9,7 +9,7 @@ from app.schemas.schedule_schema import ScheduleResponse
 from datetime import datetime, time, timedelta
 from typing import List
 from datetime import date
-from app.utils.parsedata import parse_timetable_excel
+from app.utils.parsedata import parse_timetable_excel, check_register_schedule
 from pathlib import Path
 
 UPLOAD_FOLDER = Path("data_excel_upload")
@@ -302,16 +302,13 @@ class ScheduleService:
     @staticmethod
     def secretary_upload_schedule(db: Session):
         try:
-            if not file.filename.endswith(('.xlsx', '.xls')):
-                raise HTTPException(status_code=400, detail="Chỉ chấp nhận tệp Excel (.xlsx, .xls)")
-
             file_path = UPLOAD_FOLDER / UPLOAD_FILE_NAME
-            result = parse_timetable_excel(str(file_path), db)
-
+            print("Đây là đường dẫn",file_path)
+            parse_timetable_excel(str(file_path), db)
+            check_register_schedule(db)
             return {
                 "status": "success",
-                "message": "Đã check thông tin thành công",
-                "total_records": len(result) if result else 0
+                "message": "Đã cập nhật yêu cầu thành công",
             }
 
         except Exception as e:

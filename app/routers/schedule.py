@@ -121,11 +121,10 @@ async def secretary_upload_schedule(
 
         try:
             logger.info("Bắt đầu xử lý file lịch")
-            result = "OK"
-            # result = ScheduleService.secretary_upload_schedule(
-            #     db=db,
-            #     file_path=str(existing_file_path)
-            # )
+            # result = "OK"
+            result = ScheduleService.secretary_upload_schedule(
+                db=db,
+            )
             logger.info(f"Xử lý file thành công. Số bản ghi: {len(result) if result else 0}")
         
         except Exception as process_error:
