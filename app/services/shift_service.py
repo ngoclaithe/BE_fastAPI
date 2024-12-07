@@ -62,7 +62,10 @@ class ShiftService:
         if existing_shift:
             raise HTTPException(status_code=400, detail="Shift with this description already exists for this date")
         
-        db_shift = Shift(**shift.model_dump())
+        shift_data = shift.model_dump()
+        shift_data["show_teacher"] = "true"
+        
+        db_shift = Shift(**shift_data)
         db.add(db_shift)
         db.commit()
         db.refresh(db_shift)
@@ -189,7 +192,7 @@ class ShiftService:
         for shift in shifts:
             teachers = (
                 db.query(Schedule)
-                .filter(Schedule.shift_id == shift.id, Schedule.note == "waiting")
+                .filter(Schedule.shift_id == shift.id, Schedule.note.notin_(["success", "leave_approval"]))
                 .join(Schedule.teacher)
                 .all()
             )
@@ -201,6 +204,7 @@ class ShiftService:
                     "subject": teacher_schedule.teacher.subject,
                     "phone": teacher_schedule.teacher.phone,
                     "end_time": teacher_schedule.end_time,
+                    "note": teacher_schedule.note,
                 }
                 for teacher_schedule in teachers
             ]
@@ -213,15 +217,16 @@ class ShiftService:
             })
         
         return result
+
     @staticmethod
     def get_time_range(description: int):
         """
         Lấy khung giờ bắt đầu và kết thúc của ca trực dựa trên description.
         """
         time_ranges = {
-            1: ("18:00:00", "19:30:00"),
-            2: ("19:30:00", "21:00:00"),
-            3: ("21:00:00", "22:30:00"),
+            1: ("07:00:00", "11:30:00"),
+            2: ("13:30:00", "17:00:00"),
+            3: ("18:00:00", "20:30:00"),
         }
         return time_ranges.get(description)
 

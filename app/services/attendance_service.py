@@ -144,9 +144,9 @@ class AttendanceService:
                 return {"success": False, "message": "Không có ca trực nào hôm nay"}
 
             description_to_times = {
-                '1': ('18:00:00', '19:30:00'),
-                '2': ('19:30:00', '21:00:00'),
-                '3': ('21:00:00', '22:30:00'),
+                '1': ('07:30:00', '11:30:00'),
+                '2': ('13:30:00', '17:00:00'),
+                '3': ('18:00:00', '20:30:00'),
             }
 
             time_referencers = []
@@ -263,4 +263,52 @@ class AttendanceService:
             raise HTTPException(
                 status_code=500,
                 detail=f"Lỗi truy xuất chi tiết điểm danh: {str(e)}"
+            )
+
+    @staticmethod
+    def get_attendance_by_teacher(db: Session, teacher_id: str):  
+
+        try:
+            print("Giá trị teacher id là", teacher_id)  
+            attendance_records = (
+                db.query(
+                    Attendance.check_in,
+                    Attendance.check_out,
+                    Attendance.date,
+                    Attendance.time,
+                    Attendance.teacher_id,
+                    Attendance.description,
+                    Attendance.note
+                )
+                .filter(Attendance.teacher_id == str(teacher_id))  
+                .all()
+            )
+
+            if not attendance_records:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Không tìm thấy điểm danh cho giáo viên với ID {teacher_id}"
+                )
+
+            result = [
+                {
+                    "check_in": record.check_in,
+                    "check_out": record.check_out,
+                    "date": record.date,
+                    "time": record.time,
+                    "teacher_id": record.teacher_id,
+                    "description": record.description,
+                    "note": record.note
+                }
+                for record in attendance_records
+            ]
+
+            return result
+
+        except HTTPException as http_exc:
+            raise http_exc
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Lỗi truy xuất điểm danh: {str(e)}"
             )

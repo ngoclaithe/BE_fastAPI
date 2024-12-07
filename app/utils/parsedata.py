@@ -9,9 +9,9 @@ from datetime import datetime
 from app.database import SessionLocal
 
 shift_times = {
-    "1": ("18:00", "19:30"),
-    "2": ("19:30", "21:00"),
-    "3": ("21:00", "22:30")
+    "1": ("07:00", "11:30"),
+    "2": ("13:30", "17:00"),
+    "3": ("18:00", "20:30")
 }
 
 lesson_times = {
@@ -115,7 +115,7 @@ def check_register_schedule(db: Session):
             (TeachingPlan.teacher_code == Teacher.teacher_code)
             & (TeachingPlan.date == Shift.date),  
         )
-        .filter(Schedule.note == "waiting")
+        # .filter(Schedule.note == "success")
         .all()
     )
 

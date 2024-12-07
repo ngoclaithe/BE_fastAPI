@@ -167,3 +167,6 @@ async def get_attendance_details(
             status_code=500,
             detail=f"Lỗi server: {str(e)}"
         )
+@router.get("/get-attendance-by-teacher/{teacher_id}")
+async def get_attendance_by_teacher(teacher_id: str, db: Session = Depends(get_db)):
+    return AttendanceService.get_attendance_by_teacher(db, teacher_id)

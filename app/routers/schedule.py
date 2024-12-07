@@ -43,6 +43,49 @@ def update_schedule(shift_id: int, schedule: schedule_schema.ScheduleUpdate, db:
     updated_schedule = ScheduleService.update_schedule(db=db, shift_id=shift_id, schedule=schedule)
     return updated_schedule
 
+@router.put("/change_by_teacher/{teacher_id}/{description}/{date}/{description_new}/{date_new}", response_model=schedule_schema.ScheduleResponse)
+def change_schedule_endpoint(
+    teacher_id: int, description: str, date: str, description_new: str, date_new: str, db: Session = Depends(get_db)
+):
+    try:
+        updated_schedule = ScheduleService.change_schedule(
+            db=db,
+            teacher_id=teacher_id,
+            description=description,
+            date=date,
+            description_new=description_new,
+            date_new=date_new
+        )
+        
+        return updated_schedule
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Lỗi không mong muốn khi thay đổi lịch: {e}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail="Đã xảy ra lỗi khi thay đổi lịch")
+@router.put("/leave_by_teacher/{teacher_id}/{description}/{date}", response_model=schedule_schema.ScheduleResponse)
+def leave_schedule_endpoint(
+    teacher_id: int, description: str, date: str, db: Session = Depends(get_db)
+):
+    try:
+        updated_schedule = ScheduleService.leave_schedule(
+            db=db,
+            teacher_id=teacher_id,
+            description=description,
+            date=date,
+        )
+        
+        return updated_schedule
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Lỗi không mong muốn khi thay đổi lịch: {e}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail="Đã xảy ra lỗi khi thay đổi lịch")
+
 
 @router.post("/assign/{shift_id}/{teacher_id}", response_model=schedule_schema.Schedule)
 def assign_teacher_to_shift(shift_id: int, teacher_id: int, db: Session = Depends(get_db)):

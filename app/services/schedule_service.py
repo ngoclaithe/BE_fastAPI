@@ -11,6 +11,7 @@ from typing import List
 from datetime import date
 from app.utils.parsedata import parse_timetable_excel, check_register_schedule
 from pathlib import Path
+from calendar import monthrange
 
 UPLOAD_FOLDER = Path("data_excel_upload")
 UPLOAD_FILE_NAME = "upload_excel.xlsx"
@@ -60,17 +61,6 @@ class ScheduleService:
                 detail="Lịch làm việc của giáo viên này trong ca làm việc này đã tồn tại"
             )
             
-        # if shift.description == "1":
-        #     db_schedule.start_time = "18:00"
-        #     db_schedule.end_time = "19:30"
-        # elif shift.description == "2":
-        #     db_schedule.start_time = "19:30"
-        #     db_schedule.end_time = "21:00"
-        # elif shift.description == "3":
-        #     db_schedule.start_time = "21:00"
-        #     db_schedule.end_time = "22:30"
-        # else:
-        #     raise HTTPException(status_code=400, detail="Mô tả ca làm việc không hợp lệ")
 
         db.add(db_schedule)
         db.commit()
@@ -107,7 +97,6 @@ class ScheduleService:
         db.commit()
         db.refresh(db_schedule)
 
-        # Trả về đối tượng Schedule
         return db_schedule
 
 
@@ -123,14 +112,14 @@ class ScheduleService:
         if not teacher:
             raise HTTPException(status_code=404, detail="Teacher not found")
         if shift.description == "1":
-            start_time = "18:00"
-            end_time = "19:30"
+            start_time = "07:00"
+            end_time = "11:30"
         elif shift.description == "2":
-            start_time = "19:30"
-            end_time = "21:00"
+            start_time = "13:30"
+            end_time = "17:00"
         elif shift.description == "3":
-            start_time = "21:00"
-            end_time = "22:30"
+            start_time = "18:00"
+            end_time = "20:30"
         else:
             raise HTTPException(status_code=400, detail="Invalid shift description")
 
@@ -199,37 +188,42 @@ class ScheduleService:
         return True
     @staticmethod
     def get_monthly_schedule_by_teacher(db: Session, teacher_id: int, month: str):
-
         start_date = datetime.strptime(month, "%Y-%m")
-        end_date = start_date + timedelta(days=31)
-        end_date = end_date.replace(day=1) 
+        print("Ngày bắt đầu:", start_date)
+        _, last_day = monthrange(start_date.year, start_date.month)
+        end_date = start_date.replace(day=last_day)
+        print("Ngày kết:", end_date)
 
         schedules = (
             db.query(Schedule)
             .join(Shift, Schedule.shift_id == Shift.id)
             .filter(Schedule.teacher_id == teacher_id)
-            .filter(Shift.date >= start_date)
-            .filter(Shift.date < end_date)
+            .filter(Shift.date >= start_date.date())  
+            .filter(Shift.date <= end_date.date())   
+            # .filter(Schedule.note == "success") 
             .all()
         )
+        
         result = []
         for schedule in schedules:
             shift = db.query(Shift).filter(Shift.id == schedule.shift_id).first()
             if not shift:
                 continue  
-            
+
             result.append(schedule_schema.ScheduleResponse(
                 id=schedule.id,
                 teacher_id=schedule.teacher_id,
                 shift_id=schedule.shift_id,
                 description=shift.description, 
                 date=shift.date,  
+                note=schedule.note,
             ))
 
         return result
+
     @staticmethod
     def teacher_register_schedule(
-        db: Session, teacher_id: int, description: str, date: str, note: str = "waiting"
+        db: Session, teacher_id: int, description: str, date: str, note: str = "success"
     ):
 
         date_obj = datetime.strptime(date, "%Y-%m-%d").date()
@@ -316,3 +310,57 @@ class ScheduleService:
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Lỗi xử lý: {str(e)}")
+    @staticmethod
+    def change_schedule(db: Session, teacher_id: int, description: str, date: str, description_new: str, date_new: str):
+        old_date = datetime.strptime(date, "%Y-%m-%d").date()
+        new_date = datetime.strptime(date_new, "%Y-%m-%d").date()
+
+        old_shift = db.query(Shift).filter(Shift.description == description, Shift.date == old_date).first()
+        if not old_shift:
+            raise HTTPException(status_code=404, detail="Không tìm thấy shift cũ với description và date đã cho")
+        
+        old_schedule = db.query(Schedule).filter(Schedule.shift_id == old_shift.id, Schedule.teacher_id == teacher_id).first()
+        if old_schedule:
+            db.delete(old_schedule)
+            db.commit()
+
+        new_shift = db.query(Shift).filter(Shift.description == description_new, Shift.date == new_date).first()
+        if not new_shift:
+            raise HTTPException(status_code=404, detail="Không tìm thấy shift mới với description và date mới đã cho")
+        
+        new_schedule = Schedule(
+            teacher_id=teacher_id,
+            shift_id=new_shift.id,
+            note="waiting"
+        )
+        db.add(new_schedule)
+        db.commit()
+        db.refresh(new_schedule)
+
+        return ScheduleResponse(
+            id=new_schedule.id,
+            teacher_id=new_schedule.teacher_id,
+            description=new_shift.description,
+            date=new_shift.date,
+            note=new_schedule.note
+        )
+    @staticmethod
+    def leave_schedule(db: Session, teacher_id: int, description: str, date: str):
+        date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+
+        shift = db.query(Shift).filter(Shift.description == description, Shift.date == date_obj).first()
+        if not shift:
+            raise HTTPException(status_code=404, detail="Không tìm thấy shift với description và date đã cho")
+        
+        schedule = db.query(Schedule).filter(Schedule.shift_id == shift.id, Schedule.teacher_id == teacher_id).first()
+        if schedule:
+            schedule.note = "leave_of_absence"
+            db.commit()
+
+        return ScheduleResponse(
+            id=schedule.id,
+            teacher_id=schedule.teacher_id,
+            description=shift.description,
+            date=shift.date,
+            note=schedule.note
+        )
